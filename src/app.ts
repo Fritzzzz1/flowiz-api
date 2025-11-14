@@ -5,10 +5,13 @@
  */
 
 import express, { Application } from 'express';
-import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import { corsMiddleware } from '@/middleware/cors.middleware';
+import { rateLimiter } from '@/middleware/rate-limit.middleware';
+import { errorHandler } from '@/middleware/error-handler.middleware';
+import routes from '@/routes/index';
 
 // Load environment variables
 dotenv.config();
@@ -19,12 +22,16 @@ const app: Application = express();
 app.use(helmet());
 
 // CORS configuration
-app.use(
-  cors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
-    credentials: true,
-  })
-);
+app.use(corsMiddleware);
+
+// Rate limiting (skip for health check)
+app.use((req, res, next) => {
+  if (req.path === '/health') {
+    next();
+  } else {
+    rateLimiter()(req, res, next);
+  }
+});
 
 // Logging middleware
 if (process.env.NODE_ENV !== 'test') {
@@ -45,21 +52,25 @@ app.get('/health', (_req, res) => {
   });
 });
 
-// API routes will be added here
-// app.use('/api/v1', routes);
+// API routes
+app.use('/api/v1', routes);
 
 // 404 handler
-app.use((_req, res) => {
+app.use((req, res) => {
   res.status(404).json({
     success: false,
     error: {
       code: 'NOT_FOUND',
       message: 'Route not found',
     },
+    metadata: {
+      timestamp: new Date().toISOString(),
+      requestId: (req as  { id?: string }).id,
+    },
   });
 });
 
-// Error handler will be added here
-// app.use(errorHandler);
+// Error handler (must be last)
+app.use(errorHandler);
 
 export default app;

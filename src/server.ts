@@ -7,20 +7,22 @@
 import http from 'http';
 import app from './app';
 import { logger } from './utils/logger';
+import { initializeWebSocket } from './services/websocket/socket.service';
 
 const PORT = process.env.PORT || 3001;
 
 // Create HTTP server
 const server = http.createServer(app);
 
-// WebSocket initialization will be added here
-// initializeWebSocket(server);
+// Initialize WebSocket
+initializeWebSocket(server);
 
 // Start server
 server.listen(PORT, () => {
   logger.info(`🚀 Server running on port ${PORT}`);
   logger.info(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
   logger.info(`🔍 Health check: http://localhost:${PORT}/health`);
+  logger.info(`🔌 WebSocket ready for connections`);
 });
 
 // Graceful shutdown
