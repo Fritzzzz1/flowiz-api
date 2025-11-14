@@ -1,0 +1,1270 @@
+openapi: 3.0.3
+info:
+  title: FloWiz API
+  description: |
+    Backend API for parsing CI/CD configurations, integrating with GitHub/GitLab,
+    and providing real-time pipeline monitoring.
+
+    ## Features
+    - Parse GitHub Actions and GitLab CI YAML configurations
+    - Analyze pipeline dependencies and critical paths
+    - OAuth authentication with GitHub and GitLab
+    - Real-time pipeline status updates via WebSocket
+    - Webhook handlers for GitHub and GitLab events
+  version: 1.0.0
+  contact:
+    name: FloWiz API Support
+    url: https://github.com/flowiz/flowiz-api
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3001/api/v1
+    description: Development server
+  - url: https://api.flowiz.com/api/v1
+    description: Production server
+
+tags:
+  - name: Parse
+    description: Parse and validate CI/CD configuration files
+  - name: Analysis
+    description: Analyze parsed pipelines
+  - name: GitHub
+    description: GitHub integration and OAuth
+  - name: GitLab
+    description: GitLab integration and OAuth
+  - name: Webhooks
+    description: Webhook handlers for CI/CD platforms
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      description: Check if the API is running
+      operationId: healthCheck
+      tags:
+        - Health
+      responses:
+        '200':
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  timestamp:
+                    type: string
+                    format: date-time
+                  uptime:
+                    type: number
+                    description: Uptime in seconds
+                  version:
+                    type: string
+                    example: 1.0.0
+
+  /parse:
+    post:
+      summary: Parse CI/CD configuration
+      description: Parse a GitHub Actions or GitLab CI YAML file into a unified data structure
+      operationId: parseConfig
+      tags:
+        - Parse
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParseRequest'
+      responses:
+        '200':
+          description: Successfully parsed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParseResponse'
+        '400':
+          description: Validation error or invalid YAML
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '413':
+          description: Payload too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /validate:
+    post:
+      summary: Validate CI/CD configuration
+      description: Validate YAML syntax without full parsing
+      operationId: validateConfig
+      tags:
+        - Parse
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParseRequest'
+      responses:
+        '200':
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /analysis/analyze:
+    post:
+      summary: Analyze pipeline
+      description: Analyze a parsed pipeline to extract dependency graph, critical path, and bottlenecks
+      operationId: analyzePipeline
+      tags:
+        - Analysis
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - pipeline
+              properties:
+                pipeline:
+                  $ref: '#/components/schemas/ParsedPipeline'
+      responses:
+        '200':
+          description: Analysis results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisResponse'
+        '400':
+          description: Invalid pipeline data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /integrations/github/auth:
+    get:
+      summary: Initiate GitHub OAuth
+      description: Redirect to GitHub OAuth authorization page
+      operationId: githubAuth
+      tags:
+        - GitHub
+      parameters:
+        - name: redirect_uri
+          in: query
+          description: Custom redirect URI after OAuth completion
+          schema:
+            type: string
+            format: uri
+      responses:
+        '302':
+          description: Redirect to GitHub OAuth page
+
+  /integrations/github/callback:
+    get:
+      summary: GitHub OAuth callback
+      description: Handle OAuth callback from GitHub
+      operationId: githubCallback
+      tags:
+        - GitHub
+      parameters:
+        - name: code
+          in: query
+          required: true
+          description: Authorization code from GitHub
+          schema:
+            type: string
+        - name: state
+          in: query
+          description: CSRF state token
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OAuth successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OAuthResponse'
+        '400':
+          description: Invalid or missing authorization code
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: OAuth authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /integrations/github/repositories:
+    get:
+      summary: List GitHub repositories
+      description: Get list of user's GitHub repositories
+      operationId: listGitHubRepositories
+      tags:
+        - GitHub
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: per_page
+          in: query
+          description: Items per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 30
+      responses:
+        '200':
+          description: List of repositories
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RepositoriesResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /integrations/github/workflows/{owner}/{repo}:
+    get:
+      summary: Get GitHub Actions workflows
+      description: Get workflows for a specific repository
+      operationId: getGitHubWorkflows
+      tags:
+        - GitHub
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: owner
+          in: path
+          required: true
+          description: Repository owner
+          schema:
+            type: string
+        - name: repo
+          in: path
+          required: true
+          description: Repository name
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of workflows
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowsResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Repository not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /integrations/github/runs/{owner}/{repo}/{workflowId}:
+    get:
+      summary: Get workflow runs
+      description: Get workflow run history for a specific workflow
+      operationId: getWorkflowRuns
+      tags:
+        - GitHub
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: owner
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: repo
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: workflowId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: Filter by status
+          schema:
+            type: string
+            enum: [completed, in_progress, queued]
+        - name: branch
+          in: query
+          description: Filter by branch
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: Number of runs to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+      responses:
+        '200':
+          description: List of workflow runs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowRunsResponse'
+
+  /integrations/gitlab/auth:
+    get:
+      summary: Initiate GitLab OAuth
+      description: Redirect to GitLab OAuth authorization page
+      operationId: gitlabAuth
+      tags:
+        - GitLab
+      parameters:
+        - name: redirect_uri
+          in: query
+          description: Custom redirect URI
+          schema:
+            type: string
+            format: uri
+      responses:
+        '302':
+          description: Redirect to GitLab OAuth page
+
+  /integrations/gitlab/callback:
+    get:
+      summary: GitLab OAuth callback
+      description: Handle OAuth callback from GitLab
+      operationId: gitlabCallback
+      tags:
+        - GitLab
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: state
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OAuth successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OAuthResponse'
+
+  /integrations/gitlab/projects:
+    get:
+      summary: List GitLab projects
+      description: Get list of user's GitLab projects
+      operationId: listGitLabProjects
+      tags:
+        - GitLab
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 30
+      responses:
+        '200':
+          description: List of projects
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectsResponse'
+
+  /integrations/gitlab/pipelines/{projectId}:
+    get:
+      summary: Get GitLab pipelines
+      description: Get pipelines for a specific project
+      operationId: getGitLabPipelines
+      tags:
+        - GitLab
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [running, pending, success, failed]
+        - name: ref
+          in: query
+          description: Filter by branch/tag
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+      responses:
+        '200':
+          description: List of pipelines
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PipelinesResponse'
+
+  /integrations/gitlab/pipelines/{projectId}/{pipelineId}:
+    get:
+      summary: Get pipeline details
+      description: Get detailed pipeline information including jobs
+      operationId: getGitLabPipelineDetails
+      tags:
+        - GitLab
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: pipelineId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Pipeline details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PipelineDetailsResponse'
+
+  /webhooks/github:
+    post:
+      summary: GitHub webhook handler
+      description: Handle webhook events from GitHub
+      operationId: handleGitHubWebhook
+      tags:
+        - Webhooks
+      parameters:
+        - name: X-Hub-Signature-256
+          in: header
+          required: true
+          description: Webhook signature
+          schema:
+            type: string
+        - name: X-GitHub-Event
+          in: header
+          required: true
+          description: Event type
+          schema:
+            type: string
+        - name: X-GitHub-Delivery
+          in: header
+          required: true
+          description: Delivery ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: GitHub webhook payload (varies by event type)
+      responses:
+        '200':
+          description: Webhook received
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  received:
+                    type: boolean
+                    example: true
+        '401':
+          description: Invalid signature
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Unsupported event type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /webhooks/gitlab:
+    post:
+      summary: GitLab webhook handler
+      description: Handle webhook events from GitLab
+      operationId: handleGitLabWebhook
+      tags:
+        - Webhooks
+      parameters:
+        - name: X-Gitlab-Token
+          in: header
+          required: true
+          description: Webhook secret token
+          schema:
+            type: string
+        - name: X-Gitlab-Event
+          in: header
+          required: true
+          description: Event type
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: GitLab webhook payload (varies by event type)
+      responses:
+        '200':
+          description: Webhook received
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  received:
+                    type: boolean
+                    example: true
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: OAuth Token
+
+  schemas:
+    ParseRequest:
+      type: object
+      required:
+        - platform
+        - yamlContent
+      properties:
+        platform:
+          type: string
+          enum: [github, gitlab]
+          description: CI/CD platform
+        yamlContent:
+          type: string
+          description: Raw YAML configuration content
+          maxLength: 1000000
+
+    ParseResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/ParsedPipeline'
+        metadata:
+          $ref: '#/components/schemas/ResponseMetadata'
+
+    ParsedPipeline:
+      type: object
+      required:
+        - platform
+        - jobs
+        - dependencies
+        - metadata
+      properties:
+        platform:
+          type: string
+          enum: [github, gitlab]
+        jobs:
+          type: array
+          items:
+            $ref: '#/components/schemas/Job'
+        dependencies:
+          type: array
+          items:
+            $ref: '#/components/schemas/Dependency'
+        metadata:
+          $ref: '#/components/schemas/PipelineMetadata'
+
+    Job:
+      type: object
+      required:
+        - id
+        - name
+        - steps
+        - dependsOn
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/Step'
+        dependsOn:
+          type: array
+          items:
+            type: string
+          description: Job IDs this job depends on
+        environment:
+          type: string
+        timeout:
+          type: integer
+          description: Timeout in minutes
+        runsOn:
+          type: string
+          example: ubuntu-latest
+        stage:
+          type: string
+          description: GitLab only
+        allowFailure:
+          type: boolean
+        when:
+          type: string
+          enum: [on_success, on_failure, always, manual]
+        estimatedDuration:
+          type: integer
+          description: Estimated duration in seconds
+
+    Step:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        uses:
+          type: string
+          description: GitHub Actions only
+        run:
+          type: string
+          description: Shell command
+        with:
+          type: object
+          additionalProperties: true
+          description: Action inputs
+        env:
+          type: object
+          additionalProperties:
+            type: string
+          description: Environment variables
+
+    Dependency:
+      type: object
+      required:
+        - from
+        - to
+        - type
+      properties:
+        from:
+          type: string
+          description: Source job ID
+        to:
+          type: string
+          description: Target job ID
+        type:
+          type: string
+          enum: [needs, depends_on, implicit, stage]
+
+    PipelineMetadata:
+      type: object
+      properties:
+        workflowName:
+          type: string
+        triggers:
+          type: array
+          items:
+            type: string
+          example: [push, pull_request]
+        branches:
+          type: array
+          items:
+            type: string
+        stages:
+          type: array
+          items:
+            type: string
+          description: GitLab only
+        totalJobs:
+          type: integer
+        estimatedDuration:
+          type: integer
+          description: Total estimated duration in seconds
+
+    ValidationResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            valid:
+              type: boolean
+            errors:
+              type: array
+              items:
+                $ref: '#/components/schemas/ValidationError'
+            warnings:
+              type: array
+              items:
+                $ref: '#/components/schemas/ValidationWarning'
+
+    ValidationError:
+      type: object
+      properties:
+        line:
+          type: integer
+        column:
+          type: integer
+        message:
+          type: string
+        severity:
+          type: string
+          enum: [error, warning]
+
+    ValidationWarning:
+      type: object
+      properties:
+        line:
+          type: integer
+        message:
+          type: string
+
+    AnalysisResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            graph:
+              $ref: '#/components/schemas/Graph'
+            cycles:
+              type: array
+              items:
+                $ref: '#/components/schemas/Cycle'
+            criticalPath:
+              $ref: '#/components/schemas/CriticalPath'
+            bottlenecks:
+              type: array
+              items:
+                $ref: '#/components/schemas/Bottleneck'
+            parallelGroups:
+              type: array
+              items:
+                $ref: '#/components/schemas/ParallelGroup'
+            estimatedDuration:
+              type: integer
+            maxParallelism:
+              type: integer
+            statistics:
+              $ref: '#/components/schemas/Statistics'
+
+    Graph:
+      type: object
+      properties:
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/GraphNode'
+        edges:
+          type: array
+          items:
+            $ref: '#/components/schemas/GraphEdge'
+
+    GraphNode:
+      type: object
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        type:
+          type: string
+          enum: [job]
+        metadata:
+          type: object
+          properties:
+            duration:
+              type: integer
+            status:
+              type: string
+            stage:
+              type: string
+
+    GraphEdge:
+      type: object
+      properties:
+        from:
+          type: string
+        to:
+          type: string
+        type:
+          type: string
+          enum: [needs, stage]
+
+    Cycle:
+      type: object
+      properties:
+        path:
+          type: array
+          items:
+            type: string
+        length:
+          type: integer
+
+    CriticalPath:
+      type: object
+      properties:
+        path:
+          type: array
+          items:
+            type: string
+        totalDuration:
+          type: integer
+        jobs:
+          type: array
+          items:
+            $ref: '#/components/schemas/CriticalPathJob'
+
+    CriticalPathJob:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        duration:
+          type: integer
+        cumulativeDuration:
+          type: integer
+        startOffset:
+          type: integer
+
+    Bottleneck:
+      type: object
+      properties:
+        jobId:
+          type: string
+        jobName:
+          type: string
+        reason:
+          type: string
+          enum: [longest_duration, high_fan_out, critical_path, serial_execution]
+        impact:
+          type: string
+          enum: [high, medium, low]
+        duration:
+          type: integer
+        dependentCount:
+          type: integer
+        suggestions:
+          type: array
+          items:
+            type: string
+        metrics:
+          type: object
+          properties:
+            blockingJobs:
+              type: integer
+            parallelizationOpportunity:
+              type: boolean
+            estimatedImprovement:
+              type: integer
+
+    ParallelGroup:
+      type: object
+      properties:
+        level:
+          type: integer
+        jobs:
+          type: array
+          items:
+            type: string
+        maxDuration:
+          type: integer
+
+    Statistics:
+      type: object
+      properties:
+        totalJobs:
+          type: integer
+        averageDuration:
+          type: number
+        longestJob:
+          type: string
+        shortestJob:
+          type: string
+
+    OAuthResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            accessToken:
+              type: string
+            tokenType:
+              type: string
+              example: bearer
+            scope:
+              type: string
+
+    RepositoriesResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            repositories:
+              type: array
+              items:
+                $ref: '#/components/schemas/Repository'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+
+    Repository:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        fullName:
+          type: string
+        owner:
+          type: string
+        private:
+          type: boolean
+        url:
+          type: string
+          format: uri
+        defaultBranch:
+          type: string
+        hasWorkflows:
+          type: boolean
+
+    WorkflowsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            workflows:
+              type: array
+              items:
+                $ref: '#/components/schemas/Workflow'
+
+    Workflow:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        path:
+          type: string
+        state:
+          type: string
+          enum: [active, disabled]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    WorkflowRunsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            runs:
+              type: array
+              items:
+                $ref: '#/components/schemas/WorkflowRun'
+
+    WorkflowRun:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        status:
+          type: string
+          enum: [queued, in_progress, completed]
+        conclusion:
+          type: string
+          enum: [success, failure, cancelled, skipped]
+        branch:
+          type: string
+        commit:
+          type: object
+          properties:
+            sha:
+              type: string
+            message:
+              type: string
+        createdAt:
+          type: string
+          format: date-time
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+        duration:
+          type: integer
+        url:
+          type: string
+          format: uri
+
+    ProjectsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            projects:
+              type: array
+              items:
+                $ref: '#/components/schemas/Project'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+
+    Project:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        path:
+          type: string
+        namespace:
+          type: string
+        fullPath:
+          type: string
+        visibility:
+          type: string
+          enum: [private, internal, public]
+        url:
+          type: string
+          format: uri
+        defaultBranch:
+          type: string
+
+    PipelinesResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            pipelines:
+              type: array
+              items:
+                $ref: '#/components/schemas/Pipeline'
+
+    Pipeline:
+      type: object
+      properties:
+        id:
+          type: integer
+        status:
+          type: string
+          enum: [created, waiting_for_resource, preparing, pending, running, success, failed, canceled, skipped]
+        ref:
+          type: string
+        sha:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        startedAt:
+          type: string
+          format: date-time
+        finishedAt:
+          type: string
+          format: date-time
+        duration:
+          type: integer
+        url:
+          type: string
+          format: uri
+
+    PipelineDetailsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            pipeline:
+              allOf:
+                - $ref: '#/components/schemas/Pipeline'
+                - type: object
+                  properties:
+                    jobs:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/PipelineJob'
+
+    PipelineJob:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        stage:
+          type: string
+        status:
+          type: string
+        duration:
+          type: integer
+        startedAt:
+          type: string
+          format: date-time
+        finishedAt:
+          type: string
+          format: date-time
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        perPage:
+          type: integer
+        total:
+          type: integer
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              enum:
+                - VALIDATION_ERROR
+                - PARSE_ERROR
+                - INVALID_YAML
+                - UNSUPPORTED_PLATFORM
+                - OAUTH_ERROR
+                - EXTERNAL_API_ERROR
+                - WEBHOOK_VALIDATION_ERROR
+                - RATE_LIMIT_EXCEEDED
+                - INTERNAL_ERROR
+            message:
+              type: string
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                  issue:
+                    type: string
+            retryAfter:
+              type: integer
+              description: Seconds to wait before retry (for rate limiting)
+        metadata:
+          $ref: '#/components/schemas/ResponseMetadata'
+
+    ResponseMetadata:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        requestId:
+          type: string
