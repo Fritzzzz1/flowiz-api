@@ -55,9 +55,7 @@ describe('API Routes', () => {
 
   describe('CORS', () => {
     it('should set CORS headers', async () => {
-      const response = await request(app)
-        .get('/api/v1')
-        .set('Origin', 'http://localhost:5173');
+      const response = await request(app).get('/api/v1').set('Origin', 'http://localhost:5173');
 
       expect(response.headers).toHaveProperty('access-control-allow-origin');
     });

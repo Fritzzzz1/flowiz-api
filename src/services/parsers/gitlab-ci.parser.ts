@@ -64,11 +64,7 @@ export class GitLabCIParser implements IParser {
   /**
    * Parse GitLab CI configuration file
    */
-  async parse(
-    content: string,
-    fileName: string,
-    options?: ParserOptions
-  ): Promise<ParseResult> {
+  async parse(content: string, fileName: string, options?: ParserOptions): Promise<ParseResult> {
     const errors: ParseError[] = [];
     const warnings: ParseWarning[] = [];
 
@@ -208,14 +204,16 @@ export class GitLabCIParser implements IParser {
 
     return {
       valid: result.success,
-      errors: result.errors?.map((e) => ({
-        message: e.message,
-        path: e.path,
-      })) || [],
-      warnings: result.warnings?.map((w) => ({
-        message: w.message,
-        path: w.path,
-      })) || [],
+      errors:
+        result.errors?.map((e) => ({
+          message: e.message,
+          path: e.path,
+        })) || [],
+      warnings:
+        result.warnings?.map((w) => ({
+          message: w.message,
+          path: w.path,
+        })) || [],
     };
   }
 
@@ -424,10 +422,10 @@ export class GitLabCIParser implements IParser {
         job.artifacts = {
           name: isNonEmptyString(name) ? name : 'artifacts',
           paths: normalizeToArray(paths),
-          when: isNonEmptyString(when) &&
-            ['on_success', 'on_failure', 'always'].includes(when)
-            ? (when as 'on_success' | 'on_failure' | 'always')
-            : undefined,
+          when:
+            isNonEmptyString(when) && ['on_success', 'on_failure', 'always'].includes(when)
+              ? (when as 'on_success' | 'on_failure' | 'always')
+              : undefined,
           expireIn: isNonEmptyString(expireIn) ? expireIn : undefined,
         };
       }

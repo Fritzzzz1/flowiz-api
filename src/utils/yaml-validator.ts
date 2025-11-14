@@ -116,11 +116,7 @@ export function parseYAML(content: string): unknown {
  * @param defaultValue - Default value if path not found
  * @returns Property value or default
  */
-export function getNestedProperty(
-  obj: unknown,
-  path: string,
-  defaultValue?: unknown
-): unknown {
+export function getNestedProperty(obj: unknown, path: string, defaultValue?: unknown): unknown {
   if (!obj || typeof obj !== 'object') {
     return defaultValue;
   }
@@ -129,11 +125,7 @@ export function getNestedProperty(
   let current: unknown = obj;
 
   for (const key of keys) {
-    if (
-      !current ||
-      typeof current !== 'object' ||
-      !(key in current)
-    ) {
+    if (!current || typeof current !== 'object' || !(key in current)) {
       return defaultValue;
     }
     current = (current as Record<string, unknown>)[key];
@@ -149,11 +141,7 @@ export function getNestedProperty(
  * @returns True if value is a plain object
  */
 export function isObject(value: unknown): value is Record<string, unknown> {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    !Array.isArray(value)
-  );
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 /**

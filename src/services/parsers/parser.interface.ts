@@ -53,11 +53,7 @@ export interface IParser {
    * @param options - Parser options
    * @returns Parse result with pipeline data or errors
    */
-  parse(
-    content: string,
-    fileName: string,
-    options?: ParserOptions
-  ): Promise<ParseResult>;
+  parse(content: string, fileName: string, options?: ParserOptions): Promise<ParseResult>;
 
   /**
    * Validate a CI/CD configuration file without full parsing
@@ -77,9 +73,7 @@ export interface IParser {
    * @param content - YAML content as string
    * @returns Map of job IDs to their dependencies
    */
-  extractDependencies(
-    content: string
-  ): Promise<Map<string, string[]>>;
+  extractDependencies(content: string): Promise<Map<string, string[]>>;
 }
 
 /**

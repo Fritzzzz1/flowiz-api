@@ -247,9 +247,7 @@ name: unknown
 value: 123
 `;
 
-      await expect(
-        parseFile(content, 'unknown.yml')
-      ).rejects.toThrow('Could not detect platform');
+      await expect(parseFile(content, 'unknown.yml')).rejects.toThrow('Could not detect platform');
     });
 
     it('should pass validation option', async () => {
