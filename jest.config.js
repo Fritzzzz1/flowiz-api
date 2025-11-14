@@ -4,7 +4,17 @@ module.exports = {
   roots: ['<rootDir>/tests', '<rootDir>/src'],
   testMatch: ['**/__tests__/**/*.ts', '**/?(*.)+(spec|test).ts'],
   transform: {
-    '^.+\\.ts$': 'ts-jest',
+    '^.+\\.ts$': ['ts-jest', {
+      useESM: false,
+    }],
+  },
+  transformIgnorePatterns: [
+    'node_modules/(?!uuid)',
+  ],
+  globals: {
+    'ts-jest': {
+      useESM: false,
+    },
   },
   collectCoverageFrom: [
     'src/**/*.ts',
@@ -23,6 +33,7 @@ module.exports = {
     },
   },
   moduleNameMapper: {
+    '^uuid$': '<rootDir>/tests/__mocks__/uuid.ts',
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@config/(.*)$': '<rootDir>/src/config/$1',
     '^@controllers/(.*)$': '<rootDir>/src/controllers/$1',
