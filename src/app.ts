@@ -65,7 +65,7 @@ app.use((req, res) => {
     },
     metadata: {
       timestamp: new Date().toISOString(),
-      requestId: (req as  { id?: string }).id,
+      requestId: (req as { id?: string }).id,
     },
   });
 });

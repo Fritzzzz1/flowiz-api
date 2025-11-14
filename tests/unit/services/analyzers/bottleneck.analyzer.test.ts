@@ -65,9 +65,7 @@ describe('BottleneckAnalyzer', () => {
       const criticalPath = pathAnalyzer.analyze(pipeline, dependencyGraph);
       const result = analyzer.analyze(pipeline, dependencyGraph, criticalPath);
 
-      const slowJobBottleneck = result.bottlenecks.find(
-        (b) => b.jobId === 'slow-job'
-      );
+      const slowJobBottleneck = result.bottlenecks.find((b) => b.jobId === 'slow-job');
       expect(slowJobBottleneck).toBeDefined();
       expect(slowJobBottleneck?.reasons).toContain('long_duration');
     });
@@ -247,14 +245,10 @@ describe('BottleneckAnalyzer', () => {
       const criticalPath = pathAnalyzer.analyze(pipeline, dependencyGraph);
       const result = analyzer.analyze(pipeline, dependencyGraph, criticalPath);
 
-      const slowJobBottleneck = result.bottlenecks.find(
-        (b) => b.jobId === 'slow-job'
-      );
+      const slowJobBottleneck = result.bottlenecks.find((b) => b.jobId === 'slow-job');
       expect(slowJobBottleneck).toBeDefined();
       expect(slowJobBottleneck!.suggestions.length).toBeGreaterThan(0);
-      expect(
-        slowJobBottleneck!.suggestions.some((s) => s.type === 'long_duration')
-      ).toBe(true);
+      expect(slowJobBottleneck!.suggestions.some((s) => s.type === 'long_duration')).toBe(true);
     });
   });
 });

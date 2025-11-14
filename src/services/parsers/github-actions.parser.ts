@@ -47,11 +47,7 @@ export class GitHubActionsParser implements IParser {
   /**
    * Parse GitHub Actions workflow file
    */
-  async parse(
-    content: string,
-    fileName: string,
-    options?: ParserOptions
-  ): Promise<ParseResult> {
+  async parse(content: string, fileName: string, options?: ParserOptions): Promise<ParseResult> {
     const errors: ParseError[] = [];
     const warnings: ParseWarning[] = [];
 
@@ -183,14 +179,16 @@ export class GitHubActionsParser implements IParser {
 
     return {
       valid: result.success,
-      errors: result.errors?.map((e) => ({
-        message: e.message,
-        path: e.path,
-      })) || [],
-      warnings: result.warnings?.map((w) => ({
-        message: w.message,
-        path: w.path,
-      })) || [],
+      errors:
+        result.errors?.map((e) => ({
+          message: e.message,
+          path: e.path,
+        })) || [],
+      warnings:
+        result.warnings?.map((w) => ({
+          message: w.message,
+          path: w.path,
+        })) || [],
     };
   }
 
@@ -285,10 +283,7 @@ export class GitHubActionsParser implements IParser {
   /**
    * Parse a single job
    */
-  private parseJob(
-    jobId: string,
-    jobData: unknown
-  ): Job {
+  private parseJob(jobId: string, jobData: unknown): Job {
     if (!isObject(jobData)) {
       throw new Error('Job must be an object');
     }
@@ -407,9 +402,7 @@ export class GitHubActionsParser implements IParser {
       if (!isObject(stepData)) continue;
 
       const step: Step = {
-        id: isNonEmptyString(stepData.id)
-          ? stepData.id
-          : `step-${i + 1}`,
+        id: isNonEmptyString(stepData.id) ? stepData.id : `step-${i + 1}`,
         name: isNonEmptyString(stepData.name) ? stepData.name : undefined,
       };
 

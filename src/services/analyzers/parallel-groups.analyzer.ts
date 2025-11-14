@@ -18,10 +18,7 @@ export class ParallelGroupsAnalyzer {
   /**
    * Analyzes parallel groups in the pipeline
    */
-  analyze(
-    pipeline: Pipeline,
-    dependencyGraph: DependencyGraphAnalysis
-  ): ParallelGroupsAnalysis {
+  analyze(pipeline: Pipeline, dependencyGraph: DependencyGraphAnalysis): ParallelGroupsAnalysis {
     // Can't analyze parallel groups if there are cycles
     if (dependencyGraph.hasCycles) {
       return {
@@ -34,8 +31,7 @@ export class ParallelGroupsAnalyzer {
     const levels = this.assignLevels(pipeline, dependencyGraph.graph);
     const groups = this.buildGroups(pipeline, levels);
 
-    const maxParallelism =
-      groups.length > 0 ? Math.max(...groups.map((g) => g.jobs.length)) : 0;
+    const maxParallelism = groups.length > 0 ? Math.max(...groups.map((g) => g.jobs.length)) : 0;
 
     return {
       groups,
@@ -47,10 +43,7 @@ export class ParallelGroupsAnalyzer {
   /**
    * Assigns execution levels to jobs using BFS
    */
-  private assignLevels(
-    pipeline: Pipeline,
-    graph: Map<string, Set<string>>
-  ): Map<string, number> {
+  private assignLevels(pipeline: Pipeline, graph: Map<string, Set<string>>): Map<string, number> {
     const levels = new Map<string, number>();
     const queue: Array<{ jobId: string; level: number }> = [];
     const jobMap = this.buildJobMap(pipeline);
@@ -75,15 +68,11 @@ export class ParallelGroupsAnalyzer {
         if (!dependentJob) continue;
 
         // Check if all dependencies of the dependent job have been processed
-        const allDepsProcessed = dependentJob.dependsOn.every((dep) =>
-          levels.has(dep.jobId)
-        );
+        const allDepsProcessed = dependentJob.dependsOn.every((dep) => levels.has(dep.jobId));
 
         if (allDepsProcessed && !levels.has(dependentId)) {
           // Calculate level as max(dependency levels) + 1
-          const depLevels = dependentJob.dependsOn.map(
-            (dep) => levels.get(dep.jobId) || 0
-          );
+          const depLevels = dependentJob.dependsOn.map((dep) => levels.get(dep.jobId) || 0);
           const maxDepLevel = depLevels.length > 0 ? Math.max(...depLevels) : -1;
           const newLevel = maxDepLevel + 1;
 
@@ -99,10 +88,7 @@ export class ParallelGroupsAnalyzer {
   /**
    * Builds parallel groups from assigned levels
    */
-  private buildGroups(
-    pipeline: Pipeline,
-    levels: Map<string, number>
-  ): ParallelGroup[] {
+  private buildGroups(pipeline: Pipeline, levels: Map<string, number>): ParallelGroup[] {
     // Find max level
     const levelValues = Array.from(levels.values());
     if (levelValues.length === 0) {
@@ -115,9 +101,7 @@ export class ParallelGroupsAnalyzer {
 
     // Group jobs by level
     for (let level = 0; level <= maxLevel; level++) {
-      const jobsAtLevel = pipeline.jobs
-        .filter((j) => levels.get(j.id) === level)
-        .map((j) => j.id);
+      const jobsAtLevel = pipeline.jobs.filter((j) => levels.get(j.id) === level).map((j) => j.id);
 
       if (jobsAtLevel.length > 0) {
         // Calculate max duration for this group

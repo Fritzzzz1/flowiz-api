@@ -111,9 +111,7 @@ describe('AnalysisService', () => {
       const result = service.analyze(pipeline);
 
       expect(result.parallelGroups.maxParallelism).toBe(3);
-      expect(result.bottlenecks.bottlenecks.some((b) => b.jobId === 'build')).toBe(
-        true
-      );
+      expect(result.bottlenecks.bottlenecks.some((b) => b.jobId === 'build')).toBe(true);
     });
   });
 

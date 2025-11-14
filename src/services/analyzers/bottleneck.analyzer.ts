@@ -38,10 +38,7 @@ export class BottleneckAnalyzer {
   ): BottleneckAnalysis {
     const jobDurations = this.calculateJobDurations(pipeline);
     const avgDuration = this.calculateAverageDuration(jobDurations);
-    const dependentCounts = this.calculateDependentCounts(
-      pipeline,
-      dependencyGraph.graph
-    );
+    const dependentCounts = this.calculateDependentCounts(pipeline, dependencyGraph.graph);
 
     const bottlenecks: Bottleneck[] = [];
 
@@ -190,10 +187,7 @@ export class BottleneckAnalyzer {
   /**
    * Calculates the impact of a job (number of jobs transitively affected)
    */
-  private calculateImpact(
-    jobId: string,
-    graph: Map<string, Set<string>>
-  ): number {
+  private calculateImpact(jobId: string, graph: Map<string, Set<string>>): number {
     const visited = new Set<string>();
 
     const dfs = (node: string): void => {
@@ -232,8 +226,7 @@ export class BottleneckAnalyzer {
         case 'critical_path':
           suggestions.push({
             type: reason,
-            suggestion:
-              'Optimizing this job will directly reduce total pipeline time',
+            suggestion: 'Optimizing this job will directly reduce total pipeline time',
           });
           break;
         case 'serial_execution':

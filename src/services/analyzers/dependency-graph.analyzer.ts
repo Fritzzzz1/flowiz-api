@@ -6,10 +6,7 @@
  */
 
 import type { Pipeline } from '@/types/pipeline.types';
-import type {
-  DependencyGraphAnalysis,
-  DependencyCycle,
-} from '@/types/analysis.types';
+import type { DependencyGraphAnalysis, DependencyCycle } from '@/types/analysis.types';
 
 /**
  * Analyzes pipeline dependencies and builds a dependency graph
@@ -83,8 +80,7 @@ export class DependencyGraphAnalyzer {
           // Check if this cycle is already recorded
           const cycleExists = cycles.some(
             (c) =>
-              c.path.length === cyclePath.length &&
-              c.path.every((id, i) => id === cyclePath[i])
+              c.path.length === cyclePath.length && c.path.every((id, i) => id === cyclePath[i])
           );
 
           if (!cycleExists) {

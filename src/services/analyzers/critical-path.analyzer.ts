@@ -29,10 +29,7 @@ export class CriticalPathAnalyzer {
   /**
    * Analyzes the critical path of a pipeline
    */
-  analyze(
-    pipeline: Pipeline,
-    dependencyGraph: DependencyGraphAnalysis
-  ): CriticalPathAnalysis {
+  analyze(pipeline: Pipeline, dependencyGraph: DependencyGraphAnalysis): CriticalPathAnalysis {
     // Can't calculate critical path if there are cycles
     if (dependencyGraph.hasCycles) {
       return {
@@ -154,10 +151,7 @@ export class CriticalPathAnalyzer {
     const jobId = job.id.toLowerCase();
 
     for (const [pattern, duration] of Object.entries(this.DEFAULT_DURATIONS)) {
-      if (
-        pattern !== 'default' &&
-        (jobName.includes(pattern) || jobId.includes(pattern))
-      ) {
+      if (pattern !== 'default' && (jobName.includes(pattern) || jobId.includes(pattern))) {
         return duration;
       }
     }

@@ -5,7 +5,13 @@
  */
 
 import type { Pipeline } from '@/types/pipeline.types';
-import type { PipelineAnalysis } from '@/types/analysis.types';
+import type {
+  PipelineAnalysis,
+  DependencyGraphAnalysis,
+  CriticalPathAnalysis,
+  BottleneckAnalysis,
+  ParallelGroupsAnalysis,
+} from '@/types/analysis.types';
 import { DependencyGraphAnalyzer } from './dependency-graph.analyzer';
 import { CriticalPathAnalyzer } from './critical-path.analyzer';
 import { BottleneckAnalyzer } from './bottleneck.analyzer';
@@ -35,23 +41,13 @@ export class AnalysisService {
     const dependencyGraph = this.dependencyGraphAnalyzer.analyze(pipeline);
 
     // Step 2: Find critical path
-    const criticalPath = this.criticalPathAnalyzer.analyze(
-      pipeline,
-      dependencyGraph
-    );
+    const criticalPath = this.criticalPathAnalyzer.analyze(pipeline, dependencyGraph);
 
     // Step 3: Identify bottlenecks
-    const bottlenecks = this.bottleneckAnalyzer.analyze(
-      pipeline,
-      dependencyGraph,
-      criticalPath
-    );
+    const bottlenecks = this.bottleneckAnalyzer.analyze(pipeline, dependencyGraph, criticalPath);
 
     // Step 4: Identify parallel groups
-    const parallelGroups = this.parallelGroupsAnalyzer.analyze(
-      pipeline,
-      dependencyGraph
-    );
+    const parallelGroups = this.parallelGroupsAnalyzer.analyze(pipeline, dependencyGraph);
 
     return {
       pipelineId: pipeline.id,
@@ -66,14 +62,14 @@ export class AnalysisService {
   /**
    * Analyzes only the dependency graph
    */
-  analyzeDependencyGraph(pipeline: Pipeline) {
+  analyzeDependencyGraph(pipeline: Pipeline): DependencyGraphAnalysis {
     return this.dependencyGraphAnalyzer.analyze(pipeline);
   }
 
   /**
    * Analyzes only the critical path
    */
-  analyzeCriticalPath(pipeline: Pipeline) {
+  analyzeCriticalPath(pipeline: Pipeline): CriticalPathAnalysis {
     const dependencyGraph = this.dependencyGraphAnalyzer.analyze(pipeline);
     return this.criticalPathAnalyzer.analyze(pipeline, dependencyGraph);
   }
@@ -81,19 +77,16 @@ export class AnalysisService {
   /**
    * Analyzes only bottlenecks
    */
-  analyzeBottlenecks(pipeline: Pipeline) {
+  analyzeBottlenecks(pipeline: Pipeline): BottleneckAnalysis {
     const dependencyGraph = this.dependencyGraphAnalyzer.analyze(pipeline);
-    const criticalPath = this.criticalPathAnalyzer.analyze(
-      pipeline,
-      dependencyGraph
-    );
+    const criticalPath = this.criticalPathAnalyzer.analyze(pipeline, dependencyGraph);
     return this.bottleneckAnalyzer.analyze(pipeline, dependencyGraph, criticalPath);
   }
 
   /**
    * Analyzes only parallel groups
    */
-  analyzeParallelGroups(pipeline: Pipeline) {
+  analyzeParallelGroups(pipeline: Pipeline): ParallelGroupsAnalysis {
     const dependencyGraph = this.dependencyGraphAnalyzer.analyze(pipeline);
     return this.parallelGroupsAnalyzer.analyze(pipeline, dependencyGraph);
   }

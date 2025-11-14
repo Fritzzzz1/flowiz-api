@@ -15,7 +15,7 @@ function getCorsOptions(): CorsOptions {
     : ['http://localhost:5173'];
 
   return {
-    origin: (origin, callback) => {
+    origin: (origin, callback): void => {
       // Allow requests with no origin (like mobile apps, Postman, curl)
       if (!origin) {
         callback(null, true);

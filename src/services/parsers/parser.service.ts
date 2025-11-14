@@ -7,7 +7,7 @@
 import { IParser, IParserFactory } from './parser.interface';
 import { GitHubActionsParser } from './github-actions.parser';
 import { GitLabCIParser } from './gitlab-ci.parser';
-import { Platform } from '@/types/pipeline.types';
+import type { Platform, ParseResult } from '@/types/pipeline.types';
 
 /**
  * Parser factory implementation
@@ -57,10 +57,7 @@ export class ParserFactory implements IParserFactory {
    */
   private isGitHubActions(fileName: string, content?: string): boolean {
     // Check file path
-    if (
-      fileName.includes('.github/workflows/') ||
-      fileName.startsWith('workflows/')
-    ) {
+    if (fileName.includes('.github/workflows/') || fileName.startsWith('workflows/')) {
       return true;
     }
 
@@ -85,10 +82,7 @@ export class ParserFactory implements IParserFactory {
    */
   private isGitLabCI(fileName: string, content?: string): boolean {
     // Check file name
-    if (
-      fileName === '.gitlab-ci.yml' ||
-      fileName.endsWith('/.gitlab-ci.yml')
-    ) {
+    if (fileName === '.gitlab-ci.yml' || fileName.endsWith('/.gitlab-ci.yml')) {
       return true;
     }
 
@@ -126,10 +120,7 @@ export function getParser(platform: Platform): IParser {
 /**
  * Helper function to detect platform
  */
-export function detectPlatform(
-  fileName: string,
-  content?: string
-): Platform | null {
+export function detectPlatform(fileName: string, content?: string): Platform | null {
   return parserFactory.detectPlatform(fileName, content);
 }
 
@@ -144,7 +135,7 @@ export async function parseFile(
     validate?: boolean;
     includeWarnings?: boolean;
   }
-) {
+): Promise<ParseResult> {
   let platform = options?.platform;
 
   // Auto-detect platform if not specified
