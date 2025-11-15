@@ -15,11 +15,7 @@ import type { ParseRequest, ValidateRequest } from '@/schemas/parse.schema';
  *
  * POST /api/v1/parse
  */
-export async function parseConfig(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> {
+export async function parseConfig(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { platform, yamlContent, fileName, options } = req.body as ParseRequest;
 

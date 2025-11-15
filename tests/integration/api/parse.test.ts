@@ -339,10 +339,7 @@ describe('POST /api/v1/parse/detect-platform', () => {
   });
 
   it('should return 400 for missing yamlContent', async () => {
-    const response = await request(app)
-      .post('/api/v1/parse/detect-platform')
-      .send({})
-      .expect(400);
+    const response = await request(app).post('/api/v1/parse/detect-platform').send({}).expect(400);
 
     expect(response.body.success).toBe(false);
   });

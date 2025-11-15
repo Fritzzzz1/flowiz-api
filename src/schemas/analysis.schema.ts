@@ -11,9 +11,7 @@ import { z } from 'zod';
  */
 const JobDependencySchema = z.object({
   jobId: z.string().describe('Job ID this dependency references'),
-  type: z
-    .enum(['needs', 'depends_on', 'requires'])
-    .describe('Type of dependency relationship'),
+  type: z.enum(['needs', 'depends_on', 'requires']).describe('Type of dependency relationship'),
 });
 
 /**
@@ -24,7 +22,10 @@ const StepSchema = z.object({
   name: z.string().optional().describe('Step name'),
   command: z.string().optional().describe('Command to execute'),
   uses: z.string().optional().describe('GitHub Action to use'),
-  script: z.union([z.string(), z.array(z.string())]).optional().describe('GitLab CI script'),
+  script: z
+    .union([z.string(), z.array(z.string())])
+    .optional()
+    .describe('GitLab CI script'),
   with: z.record(z.string(), z.unknown()).optional().describe('Action inputs'),
   env: z.record(z.string(), z.string()).optional().describe('Environment variables'),
   continueOnError: z.boolean().optional().describe('Continue on error'),
@@ -73,7 +74,10 @@ const JobSchema = z.object({
   stage: z.string().optional().describe('Pipeline stage'),
   dependsOn: z.array(JobDependencySchema).default([]).describe('Job dependencies'),
   steps: z.array(StepSchema).min(1, 'Job must have at least one step').describe('Job steps'),
-  runsOn: z.union([z.string(), z.array(z.string())]).optional().describe('Runner labels'),
+  runsOn: z
+    .union([z.string(), z.array(z.string())])
+    .optional()
+    .describe('Runner labels'),
   image: z.string().optional().describe('Docker image'),
   services: z.array(z.string()).optional().describe('Service containers'),
   environment: z
@@ -119,10 +123,7 @@ export const PipelineSchema = z.object({
   id: z.string().describe('Pipeline identifier'),
   name: z.string().min(1, 'Pipeline name cannot be empty').describe('Pipeline name'),
   platform: z.enum(['github-actions', 'gitlab-ci']).describe('CI/CD platform'),
-  jobs: z
-    .array(JobSchema)
-    .min(1, 'Pipeline must have at least one job')
-    .describe('Pipeline jobs'),
+  jobs: z.array(JobSchema).min(1, 'Pipeline must have at least one job').describe('Pipeline jobs'),
   triggers: TriggerConfigSchema.describe('Pipeline triggers'),
   defaultEnv: z.record(z.string(), z.string()).optional().describe('Default environment variables'),
   stages: z.array(z.string()).optional().describe('GitLab stages'),

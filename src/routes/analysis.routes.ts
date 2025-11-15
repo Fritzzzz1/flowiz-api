@@ -22,11 +22,7 @@ const router = Router();
  * POST /api/v1/analysis/analyze
  * Perform complete pipeline analysis
  */
-router.post(
-  '/analyze',
-  validate(AnalyzeRequestSchema),
-  analyzePipeline
-);
+router.post('/analyze', validate(AnalyzeRequestSchema), analyzePipeline);
 
 /**
  * POST /api/v1/analysis/dependency-graph
@@ -52,11 +48,7 @@ router.post(
  * POST /api/v1/analysis/bottlenecks
  * Identify performance bottlenecks
  */
-router.post(
-  '/bottlenecks',
-  validate(z.object({ pipeline: PipelineSchema })),
-  analyzeBottlenecks
-);
+router.post('/bottlenecks', validate(z.object({ pipeline: PipelineSchema })), analyzeBottlenecks);
 
 /**
  * POST /api/v1/analysis/parallel-groups

@@ -29,11 +29,7 @@ export const ParseRequestSchema = z.object({
   options: z
     .object({
       validate: z.boolean().optional().default(true).describe('Validate configuration'),
-      includeWarnings: z
-        .boolean()
-        .optional()
-        .default(true)
-        .describe('Include warnings in result'),
+      includeWarnings: z.boolean().optional().default(true).describe('Include warnings in result'),
       repoContext: z
         .object({
           owner: z.string().describe('Repository owner'),

@@ -200,10 +200,7 @@ describe('POST /api/v1/analysis/analyze', () => {
 
   describe('validation errors', () => {
     it('should return 400 for missing pipeline', async () => {
-      const response = await request(app)
-        .post('/api/v1/analysis/analyze')
-        .send({})
-        .expect(400);
+      const response = await request(app).post('/api/v1/analysis/analyze').send({}).expect(400);
 
       expect(response.body.success).toBe(false);
     });
