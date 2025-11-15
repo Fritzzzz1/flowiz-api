@@ -15,14 +15,14 @@
 | **Phase 2: Core Server Setup** | ✅ Complete | 100% | 2025-11-14 |
 | **Phase 3: Parser Development** | ✅ Complete | 100% | 2025-11-14 |
 | **Phase 4: Analysis Engine** | ✅ Complete | 100% | 2025-11-14 |
-| **Phase 5: API Endpoints** | ⏳ Next | 0% | TBD |
-| **Phase 6: GitHub/GitLab Integration** | 📋 Planned | 0% | TBD |
-| **Phase 7: WebSocket Real-time Updates** | 📋 Planned | 0% | TBD |
+| **Phase 5: API Endpoints** | ✅ Complete | 100% | 2025-11-15 |
+| **Phase 6: GitHub/GitLab Integration** | ⏳ Next (Requires OAuth) | 0% | TBD |
+| **Phase 7: WebSocket Real-time Updates** | ✅ Complete | 100% | 2025-11-14 |
 | **Phase 8: Documentation & Polish** | 📋 Planned | 0% | TBD |
 | **Phase 9: Testing & QA** | 📋 Planned | 0% | TBD |
 | **Phase 10: Deployment Preparation** | 📋 Planned | 0% | TBD |
 
-**Overall Project Progress**: 50% (5/10 phases complete)
+**Overall Project Progress**: 70% (7/10 phases complete)
 
 ---
 
@@ -168,6 +168,71 @@
 
 ---
 
+## ✅ Phase 5: API Endpoints - COMPLETE
+
+**Objective**: Implement REST API endpoints for parsing and analyzing CI/CD configurations.
+
+### Deliverables (5/5 Complete)
+
+1. ✅ **Validation Schemas** - Zod schemas for parse and analysis requests
+2. ✅ **Parse Controller** - Parse, validate, and detect platform endpoints
+3. ✅ **Analysis Controller** - Complete and individual analysis endpoints
+4. ✅ **Route Configuration** - All endpoints mounted and tested
+5. ✅ **Integration Tests** - 39 tests (100% passing)
+
+### Endpoints Implemented
+
+**Parse Endpoints:**
+- `POST /api/v1/parse` - Parse GitHub Actions or GitLab CI
+- `POST /api/v1/parse/validate` - Validate configuration
+- `POST /api/v1/parse/detect-platform` - Detect platform
+
+**Analysis Endpoints:**
+- `POST /api/v1/analysis/analyze` - Complete analysis
+- `POST /api/v1/analysis/dependency-graph` - Graph analysis
+- `POST /api/v1/analysis/critical-path` - Critical path
+- `POST /api/v1/analysis/bottlenecks` - Bottleneck detection
+- `POST /api/v1/analysis/parallel-groups` - Parallel groups
+
+### Metrics
+- **Controllers**: 2 (parse, analysis)
+- **Routes**: 3 route files
+- **Schemas**: 2 validation files
+- **Test Files**: 2 integration test files
+- **Tests Added**: 39 (196 total)
+- **Lines of Code**: ~1,561
+
+**Summary**: [docs/PHASE_5_SUMMARY.md](docs/PHASE_5_SUMMARY.md)
+
+---
+
+## ✅ Phase 7: WebSocket Real-time Updates - COMPLETE
+
+**Objective**: Implement WebSocket service for real-time pipeline and job updates.
+
+### Deliverables (1/1 Complete)
+
+1. ✅ **WebSocket Service** - Socket.io with room-based subscriptions
+
+### Features Implemented
+
+- WebSocket server with CORS configuration
+- Connection/disconnection handling
+- Pipeline subscription (`subscribe-pipeline`, `unsubscribe-pipeline`)
+- Event emission (`pipeline-update`, `job-update`)
+- Room-based broadcasting
+- Error handling and logging
+- Graceful shutdown support
+
+### Metrics
+- **Service Files**: 1
+- **Lines of Code**: ~167
+- **Events Supported**: 4 (subscribe, unsubscribe, pipeline-update, job-update)
+
+**Note**: Implemented during Phase 2 as part of core server setup.
+
+---
+
 ## 📁 Repository Structure
 
 ```
@@ -184,14 +249,26 @@ flowiz-api/
 │   ├── openapi.yaml                  ✅ OpenAPI 3.0 spec
 │   ├── PHASE_0_SUMMARY.md            ✅ Phase 0 summary
 │   ├── PHASE_1_SUMMARY.md            ✅ Phase 1 summary
-│   └── PHASE_4_SUMMARY.md            ✅ Phase 4 summary
+│   ├── PHASE_4_SUMMARY.md            ✅ Phase 4 summary
+│   └── PHASE_5_SUMMARY.md            ✅ Phase 5 summary
 ├── src/
 │   ├── config/                       📁 Configuration (empty)
-│   ├── controllers/                  📁 Controllers (empty)
-│   ├── middleware/                   📁 Middleware (empty)
+│   ├── controllers/
+│   │   ├── parse.controller.ts               ✅ Parse endpoints controller
+│   │   └── analysis.controller.ts            ✅ Analysis endpoints controller
+│   ├── middleware/
+│   │   ├── error-handler.middleware.ts       ✅ Error handler
+│   │   ├── validate.middleware.ts            ✅ Zod validation
+│   │   ├── rate-limit.middleware.ts          ✅ Rate limiting
+│   │   └── cors.middleware.ts                ✅ CORS config
 │   ├── models/                       📁 Data models (empty)
-│   ├── routes/                       📁 API routes (empty)
-│   ├── schemas/                      📁 Validation schemas (empty)
+│   ├── routes/
+│   │   ├── index.ts                          ✅ Main router
+│   │   ├── parse.routes.ts                   ✅ Parse routes
+│   │   └── analysis.routes.ts                ✅ Analysis routes
+│   ├── schemas/
+│   │   ├── parse.schema.ts                   ✅ Parse validation schemas
+│   │   └── analysis.schema.ts                ✅ Analysis validation schemas
 │   ├── services/
 │   │   ├── parsers/
 │   │   │   ├── parser.interface.ts           ✅ Parser interface
@@ -226,7 +303,9 @@ flowiz-api/
 │   ├── integration/
 │   │   └── api/
 │   │       ├── health.test.ts                ✅ Health endpoint tests
-│   │       └── routes.test.ts                ✅ Route tests
+│   │       ├── routes.test.ts                ✅ Route tests
+│   │       ├── parse.test.ts                 ✅ Parse endpoint tests
+│   │       └── analysis.test.ts              ✅ Analysis endpoint tests
 │   └── e2e/                          📁 E2E tests (empty)
 ├── .dockerignore                     ✅ Docker ignore
 ├── .env.example                      ✅ Environment template
@@ -256,23 +335,25 @@ flowiz-api/
 - ✅ Health check endpoint (`GET /health`)
 - ✅ API info endpoint (`GET /api/v1`)
 - ✅ Middleware layer (error, validation, rate limit, CORS)
-- ✅ WebSocket service with Socket.io
-- ✅ GitHub Actions parser
-- ✅ GitLab CI parser
-- ✅ Pipeline analysis engine (4 analyzers)
+- ✅ WebSocket service with Socket.io (subscribe/unsubscribe, pipeline/job updates)
+- ✅ GitHub Actions parser (with matrix, dependencies, validation)
+- ✅ GitLab CI parser (with stages, needs, artifacts, cache)
+- ✅ Pipeline analysis engine (dependency graph, critical path, bottlenecks, parallel groups)
+- ✅ Parse endpoints (`/parse`, `/validate`, `/detect-platform`)
+- ✅ Analysis endpoints (complete and individual analyzers)
 - ✅ TypeScript compilation with path alias resolution
-- ✅ Testing with Jest (156 tests, 100% passing)
+- ✅ Testing with Jest (196 tests, 100% passing)
 - ✅ Linting with ESLint
 - ✅ Formatting with Prettier
 - ✅ Docker builds (production & dev)
 - ✅ CI/CD pipeline
 
-### What's Next (Phase 5)
-1. Create API endpoints for pipeline parsing
-2. Create API endpoints for pipeline analysis
-3. Implement request validation schemas
-4. Add error handling for API endpoints
-5. Write integration tests for endpoints
+### What's Next (Phase 8 - Internal Tasks)
+1. Add code documentation and comments
+2. Update README with usage examples
+3. Create API usage guide
+4. Add developer documentation
+5. Improve error messages and logging
 
 ---
 
@@ -280,12 +361,12 @@ flowiz-api/
 
 | Metric | Target | Current | Status |
 |--------|--------|---------|--------|
-| **Test Coverage** | >80% | 100% | 🟢 |
+| **Test Coverage** | >80% | 87.71% | 🟢 |
 | **TypeScript Errors** | 0 | 0 | 🟢 |
 | **ESLint Errors** | 0 | 0 | 🟢 |
 | **Build Success** | 100% | 100% | 🟢 |
 | **CI Pipeline** | Passing | ✅ | 🟢 |
-| **Tests Passing** | 100% | 156/156 | 🟢 |
+| **Tests Passing** | 100% | 196/196 | 🟢 |
 | **Documentation** | Complete | 5,000+ lines | 🟢 |
 
 ---
@@ -435,9 +516,10 @@ npm start
 - [x] Analyze dependencies
 - [x] Calculate critical paths
 - [x] Identify bottlenecks
-- [ ] OAuth integration
-- [ ] Real-time updates
-- [ ] >80% test coverage
+- [x] REST API endpoints (parse & analysis)
+- [x] Real-time WebSocket updates
+- [ ] OAuth integration (GitHub/GitLab)
+- [x] >80% test coverage (87.71%)
 - [ ] Complete documentation
 - [ ] Production deployment ready
 
@@ -470,6 +552,6 @@ npm start
 ---
 
 **Last Build**: ✅ Success
-**Last Test Run**: ✅ 156/156 passing
-**Last Commit**: Phase 4 - Analysis Engine (in progress)
-**Next Milestone**: Phase 5 - API Endpoints
+**Last Test Run**: ✅ 196/196 passing
+**Last Commit**: Phase 5 - API Endpoints (complete)
+**Next Milestone**: Phase 6 - GitHub/GitLab Integration (requires OAuth keys)
