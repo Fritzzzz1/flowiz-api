@@ -13,6 +13,7 @@ import type {
   DependencyGraphAnalysis,
   CriticalPathAnalysis,
 } from '@/types/analysis.types';
+import { estimateJobDuration } from '@/utils/duration-estimator';
 
 /**
  * Analyzes bottlenecks in a pipeline
@@ -108,37 +109,11 @@ export class BottleneckAnalyzer {
     const durations = new Map<string, number>();
 
     for (const job of pipeline.jobs) {
-      const duration = this.estimateDuration(job);
+      const duration = estimateJobDuration(job);
       durations.set(job.id, duration);
     }
 
     return durations;
-  }
-
-  /**
-   * Estimates the duration of a job in seconds
-   */
-  private estimateDuration(job: Job): number {
-    // Use timeout if available
-    if (job.timeout && job.timeout > 0) {
-      return job.timeout;
-    }
-
-    // Default estimates based on job name patterns
-    const jobName = job.name.toLowerCase();
-    const jobId = job.id.toLowerCase();
-
-    if (jobName.includes('build') || jobId.includes('build')) {
-      return 300; // 5 minutes
-    }
-    if (jobName.includes('test') || jobId.includes('test')) {
-      return 600; // 10 minutes
-    }
-    if (jobName.includes('deploy') || jobId.includes('deploy')) {
-      return 180; // 3 minutes
-    }
-
-    return 300; // 5 minutes default
   }
 
   /**

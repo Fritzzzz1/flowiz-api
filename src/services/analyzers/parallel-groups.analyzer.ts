@@ -4,12 +4,14 @@
  * Identifies which jobs can run in parallel by grouping them into execution levels.
  */
 
-import type { Pipeline, Job } from '@/types/pipeline.types';
+import type { Pipeline } from '@/types/pipeline.types';
 import type {
   ParallelGroupsAnalysis,
   ParallelGroup,
   DependencyGraphAnalysis,
 } from '@/types/analysis.types';
+import { estimateJobDuration } from '@/utils/duration-estimator';
+import { buildJobMap } from '@/utils/analyzer-helpers';
 
 /**
  * Analyzes parallel execution groups in a pipeline
@@ -46,7 +48,7 @@ export class ParallelGroupsAnalyzer {
   private assignLevels(pipeline: Pipeline, graph: Map<string, Set<string>>): Map<string, number> {
     const levels = new Map<string, number>();
     const queue: Array<{ jobId: string; level: number }> = [];
-    const jobMap = this.buildJobMap(pipeline);
+    const jobMap = buildJobMap(pipeline);
 
     // Find root jobs (no dependencies)
     for (const job of pipeline.jobs) {
@@ -97,7 +99,7 @@ export class ParallelGroupsAnalyzer {
 
     const maxLevel = Math.max(...levelValues);
     const groups: ParallelGroup[] = [];
-    const jobMap = this.buildJobMap(pipeline);
+    const jobMap = buildJobMap(pipeline);
 
     // Group jobs by level
     for (let level = 0; level <= maxLevel; level++) {
@@ -107,7 +109,7 @@ export class ParallelGroupsAnalyzer {
         // Calculate max duration for this group
         const durations = jobsAtLevel.map((jobId) => {
           const job = jobMap.get(jobId);
-          return this.estimateDuration(job!);
+          return estimateJobDuration(job!);
         });
 
         const maxDuration = Math.max(...durations);
@@ -121,42 +123,5 @@ export class ParallelGroupsAnalyzer {
     }
 
     return groups;
-  }
-
-  /**
-   * Estimates the duration of a job in seconds
-   */
-  private estimateDuration(job: Job): number {
-    // Use timeout if available
-    if (job.timeout && job.timeout > 0) {
-      return job.timeout;
-    }
-
-    // Default estimates based on job name patterns
-    const jobName = job.name.toLowerCase();
-    const jobId = job.id.toLowerCase();
-
-    if (jobName.includes('build') || jobId.includes('build')) {
-      return 300; // 5 minutes
-    }
-    if (jobName.includes('test') || jobId.includes('test')) {
-      return 600; // 10 minutes
-    }
-    if (jobName.includes('deploy') || jobId.includes('deploy')) {
-      return 180; // 3 minutes
-    }
-
-    return 300; // 5 minutes default
-  }
-
-  /**
-   * Builds a map of job IDs to jobs for quick lookup
-   */
-  private buildJobMap(pipeline: Pipeline): Map<string, Job> {
-    const map = new Map<string, Job>();
-    for (const job of pipeline.jobs) {
-      map.set(job.id, job);
-    }
-    return map;
   }
 }
