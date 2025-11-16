@@ -25,6 +25,7 @@ import {
   isArray,
   normalizeToArray,
 } from '@/utils/yaml-validator';
+import { validateJobReferences } from '@/utils/job-validator';
 import * as uuid from 'uuid';
 
 /**
@@ -158,6 +159,12 @@ export class GitLabCIParser implements IParser {
           message: `Circular dependencies detected: ${circularDeps.join(' -> ')}`,
           severity: 'error',
         });
+      }
+
+      // Validate job references
+      const jobValidation = validateJobReferences(pipeline.jobs);
+      if (!jobValidation.isValid && options?.includeWarnings) {
+        warnings.push(...jobValidation.warnings);
       }
 
       // Add warnings if requested
