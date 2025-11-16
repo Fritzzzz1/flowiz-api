@@ -56,6 +56,7 @@ export async function parseConfig(req: Request, res: Response, next: NextFunctio
       },
       metadata: {
         timestamp: new Date().toISOString(),
+        requestId: req.requestId,
         platform: result.pipeline.platform,
         jobCount: result.pipeline.jobs.length,
         hasErrors: (result.errors?.length ?? 0) > 0,
@@ -124,6 +125,7 @@ export async function validateConfig(
       },
       metadata: {
         timestamp: new Date().toISOString(),
+        requestId: req.requestId,
         errorCount: result.errors?.length ?? 0,
         warningCount: result.warnings?.length ?? 0,
       },
@@ -177,6 +179,7 @@ export async function detectPlatformFromConfig(
       },
       metadata: {
         timestamp: new Date().toISOString(),
+        requestId: req.requestId,
         fileName: fileName || 'unknown',
       },
     });

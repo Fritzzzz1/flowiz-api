@@ -14,20 +14,12 @@ import type {
   CriticalPathAnalysis,
 } from '@/types/analysis.types';
 import { estimateJobDuration } from '@/utils/duration-estimator';
+import { ANALYZER_THRESHOLDS } from '@/constants/analyzer-constants';
 
 /**
  * Analyzes bottlenecks in a pipeline
  */
 export class BottleneckAnalyzer {
-  /**
-   * Threshold multiplier for long duration detection
-   */
-  private readonly LONG_DURATION_THRESHOLD = 2;
-
-  /**
-   * Threshold for high fan-out detection
-   */
-  private readonly HIGH_FAN_OUT_THRESHOLD = 3;
 
   /**
    * Analyzes bottlenecks in the pipeline
@@ -49,12 +41,12 @@ export class BottleneckAnalyzer {
       const reasons: BottleneckType[] = [];
 
       // Check for long duration
-      if (duration > avgDuration * this.LONG_DURATION_THRESHOLD) {
+      if (duration > avgDuration * ANALYZER_THRESHOLDS.LONG_DURATION_MULTIPLIER) {
         reasons.push('long_duration');
       }
 
       // Check for high fan-out
-      if (dependentCount > this.HIGH_FAN_OUT_THRESHOLD) {
+      if (dependentCount > ANALYZER_THRESHOLDS.HIGH_FAN_OUT_THRESHOLD) {
         reasons.push('high_fan_out');
       }
 

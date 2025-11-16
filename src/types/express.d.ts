@@ -2,10 +2,14 @@
  * Express type extensions
  */
 
-import 'express';
-
-declare module 'express' {
-  export interface Request {
-    id?: string;
+declare global {
+  namespace Express {
+    interface Request {
+      id?: string;
+      /** Unique request ID for tracing and logging */
+      requestId?: string;
+    }
   }
 }
+
+export {};

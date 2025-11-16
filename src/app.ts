@@ -10,6 +10,7 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import { corsMiddleware } from '@/middleware/cors.middleware';
 import { rateLimiter } from '@/middleware/rate-limit.middleware';
+import { requestIdMiddleware } from '@/middleware/request-id.middleware';
 import { errorHandler } from '@/middleware/error-handler.middleware';
 import routes from '@/routes/index';
 
@@ -17,6 +18,9 @@ import routes from '@/routes/index';
 dotenv.config();
 
 const app: Application = express();
+
+// Request ID middleware (first, so it's available in all subsequent middleware)
+app.use(requestIdMiddleware);
 
 // Security middleware
 app.use(helmet());
@@ -43,12 +47,13 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Health check endpoint
-app.get('/health', (_req, res) => {
+app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     version: '1.0.0',
+    requestId: req.requestId,
   });
 });
 
@@ -65,7 +70,7 @@ app.use((req, res) => {
     },
     metadata: {
       timestamp: new Date().toISOString(),
-      requestId: (req as { id?: string }).id,
+      requestId: req.requestId,
     },
   });
 });

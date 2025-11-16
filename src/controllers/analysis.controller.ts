@@ -73,6 +73,7 @@ export async function analyzePipeline(
       data: responseData,
       metadata: {
         timestamp: new Date().toISOString(),
+        requestId: req.requestId,
         pipelineId: pipeline.id,
         platform: pipeline.platform,
         jobCount: pipeline.jobs.length,
@@ -120,6 +121,7 @@ export async function analyzeDependencyGraph(
       data: analysis,
       metadata: {
         timestamp: new Date().toISOString(),
+        requestId: req.requestId,
         pipelineId: pipeline.id,
       },
     });
@@ -164,6 +166,7 @@ export async function analyzeCriticalPath(
       data: analysis,
       metadata: {
         timestamp: new Date().toISOString(),
+        requestId: req.requestId,
         pipelineId: pipeline.id,
       },
     });
@@ -207,6 +210,7 @@ export async function analyzeBottlenecks(
       data: analysis,
       metadata: {
         timestamp: new Date().toISOString(),
+        requestId: req.requestId,
         pipelineId: pipeline.id,
       },
     });
@@ -251,6 +255,7 @@ export async function analyzeParallelGroups(
       data: analysis,
       metadata: {
         timestamp: new Date().toISOString(),
+        requestId: req.requestId,
         pipelineId: pipeline.id,
       },
     });
